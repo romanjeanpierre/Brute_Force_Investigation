@@ -1,37 +1,33 @@
 <h1> Brute Force Investigation</h1>
 
 <h2>Brief Description</h2>
-<p> </p>
+<p> This project involves a critical investigation into a brute force attack on our website, aimed at identifying the attack's origin, its success rate, and the extent of access gained by the attacker. Given the high urgency of the situation, a swift and thorough analysis is paramount to mitigate potential risks to our server systems. </p> 
 
-<h2>Investigation Scenarios</h2>
- <h3>PCAP 1 - Unusual Network Activity:</h3>
-    <p><strong>Objective:</strong> Investigate unusual activity on a /24 subnet, identify its source, and discern the attacker's intentions.</p>
-    <p><strong>Questions:</strong> Identify host discovery scanning, malicious port scanning, and FTP server-related information.</p>
-    <h3>PCAP 2 - Suspicious File Download:</h3>
-    <p><strong>Objective:</strong> Export and analyze a suspicious file downloaded onto a system, collecting indicators for potential threat hunting.</p>
-    <p><strong>Questions:</strong> Determine source IP, source and destination ports, file name, and various attributes of the downloaded ZIP file.</p>
-    <h3>PCAP 3 - FTP Server Under Attack:</h3>
-    <p><strong>Objective:</strong> Analyze network traffic to determine if an FTP server is successfully attacked, identifying the attacker's actions.</p>
-    <p><strong>Questions:</strong> Identify the IP running the FTP server, successful login time, credentials used, and details of the downloaded file.</p>
-    <h2>Key Activities:</h2>
-    <ul>
-        <li>Analyzing ARP traffic for host discovery.</li>
-        <li>Identifying and interpreting port-scanning activities.</li>
-        <li>Extracting information from FTP traffic, including user limits and login attempts.</li>
-        <li>Exporting and analyzing files from HTTP traffic, including ZIP files.</li>
-        <li>Determining source and destination details of file downloads.</li>
-        <li>Calculating MD5 hash values for extracted files.</li>
-        <li>Analyzing FTP server activities, login times, and user credentials.</li>
-    </ul>
+<p> The complexity of this investigation requires a multifaceted approach, analyzing various log types to piece together the sequence of events. Our focus includes scrutinizing the administrator URL (http://imreallynotbatman.com/joomla/administrator/index.php) and tracking HTTP POST requests for username and password submissions. The primary objectives are to pinpoint the attack's source swiftly, determine the breach's success, and understand the actions taken by the intruder post-access. </p>
     
 <h2>Project Walk-Through</h2>
 
-<h3> <Strong> PCAP 1</Strong></h3>
+<h3> Identify how many events relating to Login activity</h3>
+<p> Command => <code> index"botsv1" sourcetype="stream:http" http_method=POST uri="/joomla/administrator/index.php"</code></p>
+<img src="https://imgur.com/eIPxvbt.png" height="80%" width="80%" alt="FTK Imager Memory Capture">
+<p> Results = 425 Events</p>
 
-<h3> Identify evidence for Host Discovery Scanning</h3>
-<p> First PCAP shows (ARP) traffic, 192.168.56.1 is asking every IP on the same subnet for their associated MAC address</p>
-<p> This is a form of recon that allows a threat actor to identify Online systems within the same network when an ARP request has been replied to </p>
-<img src="https://imgur.com/z3KrDPD.png" height="80%" width="80%" alt="FTK Imager Memory Capture">
-<P> We can see a threat actor port scanning a target system hence this information may be used for a connection attempt.</P>
-<p> Statistics > Conversations </p>
-<img src="https://imgur.com/eOkVdav.png" height="80%" width="80%" alt="FTK Imager Memory Capture">
+<h3> Scroll to "src_ip" under interesting fields column on the left</h3>
+<p> Determine majority traffic volume from single IP address</p>
+<img src="https://imgur.com/lCAYyyz.png" height="80%" width="80%" alt="FTK Imager Memory Capture">
+<p> 23.22.63.114 with recent 412 events </p>
+
+<h3> Verify destination IP Address of web server domain </h3>
+<img src="https://imgur.com/Qp7RYyI.png" height="80%" width="80%" alt="FTK Imager Memory Capture">
+
+<h3> Determine brute force credentials used to brute force on specific date & time</h3>
+<p> Command => <code>index"botsv1" sourcetype="stream:http" http_method=POST uri="/joomla/administrator/index.php" src_ip="23.22.63.114" | spath timestamp | search timestamp=="2016-08-10T21:46:44.453730Z" </code> </p>
+<p> Exapnd packet details > Scroll to SRC_CONTENT </p>
+<img src="https://imgur.com/xGmJDaz.png" height="80%" width="80%" alt="FTK Imager Memory Capture">
+
+<h3> Improve Brute Force credentials representation </h3>
+<p> <code>index"botsv1" sourcetype="stream:http" http_method=POST uri="/joomla/administrator/index.php" src_ip="23.22.63.114" | table timestamp, form_data | sort -time asc </code></p>
+<img src="https://imgur.com/OA96RSS.png" height="80%" width="80%" alt="FTK Imager Memory Capture">
+
+<h3> Conclusion</h3>
+<p> The investigation into the brute force attack on our website has been comprehensive and revealing. We successfully identified the source of the attack, and determined the extent of its success. Our analysis, which involved a detailed examination of various log types, particularly focused on HTTP POST requests at the administrator URL, provided critical insights. Despite the complexity and urgency of the task, our methodical approach enabled us to effectively mitigate the risks posed to our server systems.</p>
